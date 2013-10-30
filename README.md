@@ -1,3 +1,5 @@
+> Warning: This is more a spec to remind myself how to construct the project than a real README. Currently my priority is to hack together a workable prototype, so this document **may be seriously inaccurate**. Please don't rely on anything written here, including command usages and config structures, including others.
+
 # Python Web Stack
 
 A complete web stack for Python WSGI applications. Called PWS onward.
