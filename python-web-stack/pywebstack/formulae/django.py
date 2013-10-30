@@ -21,8 +21,8 @@ class Django(Formula):
                 name=self.project_name
             ))
 
-    def configure(self):
+    def configure_server(self):
         pass
 
-    def deconfigure(self):
+    def deconfigure_server(self):
         pass

@@ -24,10 +24,12 @@ class Formula(object):
     def setup(self):
         self.install()
         self.create_project()
-        self.configure()
+        self.configure_database()
+        self.configure_webserver()
 
     def teardown(self):
-        self.deconfigure()
+        self.deconfigure_webserver()
+        self.deconfigure_database()
 
     # The following methods MUST be implemented
 
@@ -40,13 +42,19 @@ class Formula(object):
     def create_project(self):
         raise NotImplementedError()
 
-    def configure(self):
+    def configure_server(self):
         raise NotImplementedError()
 
-    def deconfigure(self):
+    def deconfigure_server(self):
         raise NotImplementedError()
 
-    # The following methods MAY be implemented as additional hooks
+    # The following methods MAY be re-implemented as additional hooks
+
+    def configure_database(self):
+        pass
+
+    def deconfigure_database(self):
+        pass
 
     def pre_setup(self):
         pass
