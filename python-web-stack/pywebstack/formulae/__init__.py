@@ -25,10 +25,10 @@ class Formula(object):
         self.install()
         self.create_project()
         self.configure_database()
-        self.configure_webserver()
+        self.configure_server()
 
     def teardown(self):
-        self.deconfigure_webserver()
+        self.deconfigure_server()
         self.deconfigure_database()
 
     # The following methods MUST be implemented
