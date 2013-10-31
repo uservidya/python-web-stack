@@ -29,6 +29,7 @@ class Django(Formula):
                     name=self.project_name
                 )
             )
+            # TODO: Write this command to /etc/init.d?
 
     def deconfigure_server(self):
         with chdir(self.project_root):
