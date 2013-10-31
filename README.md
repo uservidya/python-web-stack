@@ -79,6 +79,8 @@ Two scripts (probably need better names):
     
 Do we need to provide options to use a non-localhost database, even multiple databases? Maybe not...
 
+There might need to be an option to run gunicorn on a different port (using `--bind`). Default is 8000 which conflicts with Django's runserver, and will fail if you have multiple sites.
+
 #### `rmsite`
 
 `rmsite <sitename>` removes a site with name `<sitename>`
@@ -87,4 +89,21 @@ Do we need to provide options to use a non-localhost database, even multiple dat
 * Prompt whether we should remove the tables, the database, and the owner (in that order).
 
     ...Or maybe just prompt for "database removal" and leave everything else to the user?
+
+
+
+## Notes
+
+### Dependencies
+
+#### APT
+
+* nginx
+* postgresql-9.1
+* postgresql-server-dev-9.1
+
+#### PIP
+
+* gunicorn
+* psycopg2
 

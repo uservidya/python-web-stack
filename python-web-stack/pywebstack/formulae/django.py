@@ -22,7 +22,14 @@ class Django(Formula):
             ))
 
     def configure_server(self):
-        pass
+        with chdir(self.project_root):
+            os.system(
+                'gunicorn {name}.wsgi:application '
+                '--pid gunicorn.pid --daemon'.format(
+                    name=self.project_name
+                )
+            )
 
     def deconfigure_server(self):
-        pass
+        with chdir(self.project_root):
+            os.system('kill `cat gunicorn.pid`')

@@ -26,6 +26,11 @@ def setup(args):
     with chdir(os.path.join(env.virtualenv_root, args.name)):
         with open(env.project_config_file_name, 'w+') as f:
             f.write(args.type)
+
+    # Install things we need
+    os.system('pip install gunicorn psycopg2')
+
+    # Formula-specific setup
     formula = get_formula(args.type, args.name)
     formula.pre_setup()
     formula.setup()
