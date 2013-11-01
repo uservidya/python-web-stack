@@ -9,7 +9,9 @@ try:
     from configparser import ConfigParser
 except ImportError:     # Python 2 compatibility
     from ConfigParser import SafeConfigParser as ConfigParser
-from .utils import parse_args, chdir, env, get_formula
+from .utils import (
+    parse_args, chdir, env, get_formula, UnrecognizedFormulaError
+)
 
 
 def rm_virtualenv(name):
@@ -39,16 +41,20 @@ def main():
     with chdir(os.path.join(env.virtualenv_root, args.name)):
         config.read(env.project_config_file_name)
 
-    formula = get_formula(config.get('Project', 'type'), args.name)
-
     try:
-        with chdir(formula.get_wsgi_env()[0]):
-            with open('gunicorn.pid', 'r') as f:
-                os.system('kill {pid}'.format(pid=f.read()))
-    except IOError:     # No gunicorn.pid, which is alright
-        pass
+        formula = get_formula(config.get('Project', 'type', ''), args.name)
+    except UnrecognizedFormulaError:
+        formula = None
 
-    formula.teardown()
+    if formula is not None:
+        try:
+            with chdir(formula.get_wsgi_env()[0]):
+                with open('gunicorn.pid', 'r') as f:
+                    os.system('kill {pid}'.format(pid=f.read()))
+        except IOError:     # No gunicorn.pid, which is alright
+            pass
+        formula.teardown()
+
     rm_virtualenv(args.name)
 
 

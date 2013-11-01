@@ -13,7 +13,7 @@ server {
     listen localhost;
 
     location / {
-        proxy_pass http://127.0.0.1:8000;
+        proxy_pass http://%(bind_to)s;
     }
 }
     """
@@ -48,12 +48,14 @@ server {
         """
         raise NotImplementedError()
 
-    def get_nginx_conf(self):
+    def get_nginx_conf(self, bind_to):
         """Provide nginx configuration
 
+        :param bind_to: where Gunicorn is bind_to to
+        :type bind_to: str
         :rtype: str
         """
-        return self.nginx_conf
+        return self.nginx_conf % {'bind_to': bind_to}
 
     def install(self):
         raise NotImplementedError()

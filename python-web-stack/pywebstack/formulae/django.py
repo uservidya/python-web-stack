@@ -15,7 +15,7 @@ server {
     listen localhost;
 
     location / {
-        proxy_pass http://127.0.0.1:8000;
+        proxy_pass http://%(bind_to)s;
     }
 
     location /static/ {
@@ -36,11 +36,12 @@ server {
             '{name}.wsgi:application'.format(name=self.project_name)
         )
 
-    def get_nginx_conf(self):
+    def get_nginx_conf(self, bind_to):
         serve_dir = os.path.abspath(os.path.join(self.containing_dir, 'serve'))
         conf = self.nginx_conf % {
             'static_root': os.path.join(serve_dir, 'static'),
-            'media_root': os.path.join(serve_dir, 'media')
+            'media_root': os.path.join(serve_dir, 'media'),
+            'bind_to': bind_to
         }
         return conf
 

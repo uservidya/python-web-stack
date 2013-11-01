@@ -8,7 +8,9 @@ try:
     from configparser import ConfigParser
 except ImportError:     # Python 2 compatibility
     from ConfigParser import SafeConfigParser as ConfigParser
-from .utils import chdir, parse_args, env, get_formula, pip_install
+from .utils import (
+    chdir, parse_args, fill_opt_args, env, get_formula, pip_install
+)
 
 
 def make_virtualenv(args):
@@ -61,17 +63,19 @@ def setup(args):
             config.write(f)
 
     # Setup nginx
-    add_nginx_conf(args.name, formula.get_nginx_conf())
+    add_nginx_conf(args.name, formula.get_nginx_conf(args.bind_to))
 
     # (Re-)starts the server
     path, wsgi_module = formula.get_wsgi_env()
     with chdir(path):
         gunicorn = os.path.join(current_virtualenv, 'bin', 'gunicorn')
         print(gunicorn)
-        os.system('{gunicorn} {module} --pid gunicorn.pid --daemon'.format(
-            gunicorn=gunicorn,
-            module=wsgi_module
-        ))
+        os.system(
+            '{gunicorn} {module} '
+            '--bind={bind_to} --pid gunicorn.pid --daemon'.format(
+                gunicorn=gunicorn, module=wsgi_module, bind_to=args.bind_to
+            )
+        )
     # TODO: Write this command to /etc/init.d?
     os.system('service nginx restart')
 
@@ -81,7 +85,11 @@ def main():
         ('type', ('WSGI ptoject type',)),
         ('name', ('name of site',)),
     ))
-    args = parse_args(arg_list, {})
+    opt_arg_list = collections.OrderedDict((
+        ('bind_to', ('where to bind Gunicorn', '127.0.0.1:8001')),
+    ))
+    args = parse_args(arg_list, opt_arg_list)
+    args = fill_opt_args(args, opt_arg_list)
 
     env.pip = os.path.join(env.virtualenv_root, args.name, 'bin', 'pip')
     setup(args)
