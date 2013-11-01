@@ -10,7 +10,7 @@ class Formula(object):
 
     nginx_conf = """
 server {
-    listen localhost;
+    listen 80;
 
     location / {
         proxy_pass http://%(bind_to)s;
