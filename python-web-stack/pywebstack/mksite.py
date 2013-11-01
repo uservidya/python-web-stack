@@ -8,9 +8,7 @@ try:
     from configparser import ConfigParser
 except ImportError:     # Python 2 compatibility
     from ConfigParser import SafeConfigParser as ConfigParser
-from .utils import (
-    chdir, parse_args, fill_opt_args, env, get_formula, pip_install
-)
+from .utils import chdir, parse_args, env, get_formula, pip_install
 
 
 def make_virtualenv(args):
@@ -25,6 +23,19 @@ def activate_virtualenv(args):
         env.virtualenv_root, args.name, 'bin', 'activate_this.py'
     )
     exec(open(activate_script).read()) in {'__file__': activate_script}
+
+
+def add_nginx_conf(filename, content):
+    available = '/etc/nginx/sites-available'
+    enabled = '/etc/nginx/sites-enabled'
+
+    with chdir(available):
+        with open(filename, 'w') as f:
+            f.write(content)
+    with chdir(enabled):
+        if os.path.exists(filename):
+            os.remove(filename)
+        os.symlink(os.path.join(available, filename), filename)
 
 
 def setup(args):
@@ -42,21 +53,27 @@ def setup(args):
     # Formula-specific setup
     formula.setup()
 
+    current_virtualenv = os.path.join(env.virtualenv_root, args.name)
+
     # Secretly put the config file inside virtualenv to store project info
-    with chdir(os.path.join(env.virtualenv_root, args.name)):
+    with chdir(current_virtualenv):
         with open(env.project_config_file_name, 'w+') as f:
             config.write(f)
 
     # Setup nginx
-    pass
+    add_nginx_conf(args.name, formula.get_nginx_conf())
 
     # (Re-)starts the server
     path, wsgi_module = formula.get_wsgi_env()
     with chdir(path):
-        os.system('gunicorn {module} --pid gunicorn.pid --daemon'.format(
+        gunicorn = os.path.join(current_virtualenv, 'bin', 'gunicorn')
+        print(gunicorn)
+        os.system('{gunicorn} {module} --pid gunicorn.pid --daemon'.format(
+            gunicorn=gunicorn,
             module=wsgi_module
         ))
     # TODO: Write this command to /etc/init.d?
+    os.system('service nginx restart')
 
 
 def main():
@@ -64,12 +81,7 @@ def main():
         ('type', ('WSGI ptoject type',)),
         ('name', ('name of site',)),
     ))
-    opt_arg_list = collections.OrderedDict((
-        ('db_name', ('name of the database', lambda args: args.name)),
-        ('db_owner', ('owner of the database', lambda args: args.name)),
-    ))
-    args = parse_args(arg_list, opt_arg_list)
-    args = fill_opt_args(args, opt_arg_list)
+    args = parse_args(arg_list, {})
 
     env.pip = os.path.join(env.virtualenv_root, args.name, 'bin', 'pip')
     setup(args)

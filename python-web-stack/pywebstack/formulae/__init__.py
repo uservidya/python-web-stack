@@ -10,10 +10,10 @@ class Formula(object):
 
     nginx_conf = """
 server {
-    listen localhost:8000;
+    listen localhost;
 
     location / {
-        proxy_pass http://127.0.0.1:8001;
+        proxy_pass http://127.0.0.1:8000;
     }
 }
     """

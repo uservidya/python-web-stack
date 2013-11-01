@@ -12,20 +12,20 @@ class Django(Formula):
 
     nginx_conf = """
 server {
-    listen localhost:8000;
+    listen localhost;
 
     location / {
-        proxy_pass http://127.0.0.1:8001;
+        proxy_pass http://127.0.0.1:8000;
     }
 
     location /static/ {
         autoindex on;
-        alias {static_root};
+        alias %(static_root)s;
     }
 
     location /media/ {
         autoindex on;
-        alias {media_root};
+        alias %(media_root)s;
     }
 }
     """
@@ -38,10 +38,10 @@ server {
 
     def get_nginx_conf(self):
         serve_dir = os.path.abspath(os.path.join(self.containing_dir, 'serve'))
-        conf = self.nginx_conf.format(
-            static_root=os.path.join(serve_dir, 'static'),
-            media_root=os.path.join(serve_dir, 'media')
-        )
+        conf = self.nginx_conf % {
+            'static_root': os.path.join(serve_dir, 'static'),
+            'media_root': os.path.join(serve_dir, 'media')
+        }
         return conf
 
     def install(self):

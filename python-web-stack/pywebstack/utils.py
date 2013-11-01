@@ -2,9 +2,7 @@
 # coding: utf-8
 
 import os
-import sys
 import argparse
-import collections
 import contextlib
 import importlib
 from .formulae import Formula
@@ -25,7 +23,7 @@ env = Environment()
 env.virtualenv_root = os.path.join(os.path.dirname(__file__), '..', 'envs')
 env.project_container_name = 'project'
 env.project_config_file_name = '.pywebstack.conf'
-env.pip = None
+env.pip = None      # Path to virtualenv pip. Provided at runtime in main()
 
 
 @contextlib.contextmanager
@@ -73,23 +71,6 @@ def parse_args(arg_list=None, opt_arg_list=None):
                 '--' + arg_name, default=None, help=opt_arg_list[arg_name][0]
             )
     return parser.parse_args()
-
-
-def fill_opt_args(args, opt_arg_list):
-    """Fill the optional arguments by prompting user for input"""
-    for arg_name in opt_arg_list:
-        if getattr(args, arg_name, None) is None:
-            try:
-                default = opt_arg_list[arg_name][1]
-            except IndexError:
-                default = None
-            if isinstance(default, collections.Callable):
-                default = default(args)
-            result = prompt('Specify ' + opt_arg_list[arg_name][0], default)
-            if result is None:
-                sys.exit('You need to provide value for ' + arg_name)
-            setattr(args, arg_name, result)
-    return args
 
 
 def get_formula_class(formula_name):
