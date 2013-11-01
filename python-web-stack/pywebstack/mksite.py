@@ -25,10 +25,6 @@ def activate_virtualenv(args):
     exec(open(activate_script).read()) in {'__file__': activate_script}
 
 
-def setup_database(args):
-    pass
-
-
 def setup(args):
     config = ConfigParser()
     config.add_section('Project')
@@ -36,11 +32,10 @@ def setup(args):
 
     formula = get_formula(args.type, args.name)
 
-    # Run environment and database setup
+    # Run environment setup
     make_virtualenv(args)
     activate_virtualenv(args)
-    os.system('pip install gunicorn psycopg2')
-    setup_database(args)
+    os.system('pip install gunicorn')
 
     # Formula-specific setup
     formula.setup()

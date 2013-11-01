@@ -17,10 +17,6 @@ def rm_virtualenv(name):
         shutil.rmtree(name)
 
 
-def rm_database():
-    pass
-
-
 def main():
     arg_list = collections.OrderedDict((
         ('name', 'name of site to remove'),
@@ -38,7 +34,6 @@ def main():
             os.system('kill {pid}'.format(pid=f.read()))
 
     formula.teardown()
-    rm_database()
     rm_virtualenv(args.name)
 
 
