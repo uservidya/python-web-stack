@@ -7,6 +7,17 @@ import os
 class Formula(object):
     """Abstract formula interface to be inherited by concrete formula classes
     """
+
+    nginx_conf = """
+server {
+    listen localhost:8000;
+
+    location / {
+        proxy_pass http://127.0.0.1:8001;
+    }
+}
+    """
+
     def __init__(self, env, project_name):
         self.project_name = project_name
         self.containing_dir = os.path.join(
@@ -39,6 +50,13 @@ class Formula(object):
             the application.
         """
         raise NotImplementedError()
+
+    def get_nginx_conf(self):
+        """Provide nginx configuration
+
+        :rtype: str
+        """
+        return self.nginx_conf
 
     def install(self):
         raise NotImplementedError()

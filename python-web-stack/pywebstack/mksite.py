@@ -8,7 +8,7 @@ try:
     from configparser import ConfigParser
 except ImportError:     # Python 2 compatibility
     from ConfigParser import SafeConfigParser as ConfigParser
-from .utils import chdir, parse_args, fill_opt_args, env, get_formula
+from .utils import chdir, parse_args, fill_opt_args, env, get_formula, sudo
 
 
 def make_virtualenv(args):
@@ -40,18 +40,21 @@ def setup(args):
     # Formula-specific setup
     formula.setup()
 
-    # Starts the server
+    # Secretly put the config file inside virtualenv to store project info
+    with chdir(os.path.join(env.virtualenv_root, args.name)):
+        with open(env.project_config_file_name, 'w+') as f:
+            config.write(f)
+
+    # Setup nginx
+    pass
+
+    # (Re-)starts the server
     path, wsgi_module = formula.get_wsgi_env()
     with chdir(path):
         os.system('gunicorn {module} --pid gunicorn.pid --daemon'.format(
             module=wsgi_module
         ))
     # TODO: Write this command to /etc/init.d?
-
-    # Secretly put the config file inside virtualenv to store project info
-    with chdir(os.path.join(env.virtualenv_root, args.name)):
-        with open(env.project_config_file_name, 'w+') as f:
-            config.write(f)
 
 
 def main():
