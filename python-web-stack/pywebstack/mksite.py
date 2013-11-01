@@ -4,6 +4,10 @@
 from __future__ import print_function
 import os
 import collections
+try:
+    from configparser import ConfigParser
+except ImportError:     # Python 2 compatibility
+    from ConfigParser import SafeConfigParser as ConfigParser
 from .utils import chdir, parse_args, fill_opt_args, env, get_formula
 
 
@@ -21,20 +25,35 @@ def activate_virtualenv(args):
     exec(open(activate_script).read()) in {'__file__': activate_script}
 
 
-def setup(args):
-    # Secretly put a config file inside virtualenv to store project info
-    with chdir(os.path.join(env.virtualenv_root, args.name)):
-        with open(env.project_config_file_name, 'w+') as f:
-            f.write(args.type)
+def setup_database(args):
+    pass
 
-    # Install things we need
+
+def setup(args):
+    config = ConfigParser()
+    config.add_section('Project')
+    config.set('Project', 'type', args.type)
+
+    # Run environment and database setup
     os.system('pip install gunicorn psycopg2')
+    setup_database(args)
 
     # Formula-specific setup
     formula = get_formula(args.type, args.name)
-    formula.pre_setup()
     formula.setup()
-    formula.post_setup()
+
+    # Starts the server
+    path, wsgi_module = formula.get_wsgi_env()
+    with chdir(path):
+        os.system('gunicorn {module} --pid gunicorn.pid --daemon'.format(
+            module=wsgi_module
+        ))
+    # TODO: Write this command to /etc/init.d?
+
+    # Secretly put the config file inside virtualenv to store project info
+    with chdir(os.path.join(env.virtualenv_root, args.name)):
+        with open(env.project_config_file_name, 'w+') as f:
+            config.write(f)
 
 
 def main():

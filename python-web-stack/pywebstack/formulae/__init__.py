@@ -18,22 +18,27 @@ class Formula(object):
     def project_root(self):
         return os.path.join(self.containing_dir, self.project_name)
 
-    def pip(self, *cmd):
-        os.system('pip ' + ' '.join(cmd))
+    def pip_install(self, *cmd):
+        os.system('pip install ' + ' '.join(cmd))
 
     def setup(self):
         self.install()
         self.create_project()
-        self.configure_database()
-        self.configure_server()
+        self.configure()
 
     def teardown(self):
-        self.deconfigure_server()
-        self.deconfigure_database()
+        self.deconfigure()
 
     # The following methods MUST be implemented
 
-    def get_wsgi_script(self):
+    def get_wsgi_env(self):
+        """Provide needed information about WSGI for Gunicorn
+
+        :returns: A 2-tuple. The first item indicates the directory to be when
+            Gunicorn initiates the WSGI application. This is also where the
+            Gunicorn PID file resides. The second item is the module path to
+            the application.
+        """
         raise NotImplementedError()
 
     def install(self):
@@ -42,28 +47,10 @@ class Formula(object):
     def create_project(self):
         raise NotImplementedError()
 
-    def configure_server(self):
-        raise NotImplementedError()
+    # The following methods can be re-implemented for additional operations
 
-    def deconfigure_server(self):
-        raise NotImplementedError()
-
-    # The following methods MAY be re-implemented as additional hooks
-
-    def configure_database(self):
+    def configure(self):
         pass
 
-    def deconfigure_database(self):
-        pass
-
-    def pre_setup(self):
-        pass
-
-    def post_setup(self):
-        pass
-
-    def pre_teardown(self):
-        pass
-
-    def post_teardown(self):
+    def deconfigure(self):
         pass

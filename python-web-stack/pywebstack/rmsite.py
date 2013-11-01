@@ -5,6 +5,10 @@ from __future__ import print_function
 import os.path
 import collections
 import shutil
+try:
+    from configparser import ConfigParser
+except ImportError:     # Python 2 compatibility
+    from ConfigParser import SafeConfigParser as ConfigParser
 from .utils import parse_args, chdir, env, get_formula
 
 
@@ -13,20 +17,28 @@ def rm_virtualenv(name):
         shutil.rmtree(name)
 
 
+def rm_database():
+    pass
+
+
 def main():
     arg_list = collections.OrderedDict((
         ('name', 'name of site to remove'),
     ))
     args = parse_args(arg_list=arg_list)
 
-    formula_type = None
+    config = ConfigParser()
     with chdir(os.path.join(env.virtualenv_root, args.name)):
-        with open(env.project_config_file_name, 'r') as f:
-            formula_type = f.readline().strip()
-    formula = get_formula(formula_type, args.name)
-    formula.pre_teardown()
+        config.read(env.project_config_file_name)
+
+    formula = get_formula(config.get('Project', 'type'), args.name)
+
+    with chdir(formula.get_wsgi_env()[0]):
+        with open('gunicorn.pid', 'r') as f:
+            os.system('kill {pid}'.format(pid=f.read()))
+
     formula.teardown()
-    formula.post_teardown()
+    rm_database()
     rm_virtualenv(args.name)
 
 
