@@ -8,7 +8,9 @@ try:
     from configparser import ConfigParser
 except ImportError:     # Python 2 compatibility
     from ConfigParser import SafeConfigParser as ConfigParser
-from .utils import chdir, parse_args, fill_opt_args, env, get_formula, sudo
+from .utils import (
+    chdir, parse_args, fill_opt_args, env, get_formula, pip_install
+)
 
 
 def make_virtualenv(args):
@@ -35,7 +37,7 @@ def setup(args):
     # Run environment setup
     make_virtualenv(args)
     activate_virtualenv(args)
-    os.system('pip install gunicorn')
+    pip_install('gunicorn')
 
     # Formula-specific setup
     formula.setup()
@@ -68,6 +70,8 @@ def main():
     ))
     args = parse_args(arg_list, opt_arg_list)
     args = fill_opt_args(args, opt_arg_list)
+
+    env.pip = os.path.join(env.virtualenv_root, args.name, 'bin', 'pip')
     setup(args)
 
 

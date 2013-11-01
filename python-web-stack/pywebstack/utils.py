@@ -25,6 +25,7 @@ env = Environment()
 env.virtualenv_root = os.path.join(os.path.dirname(__file__), '..', 'envs')
 env.project_container_name = 'project'
 env.project_config_file_name = '.pywebstack.conf'
+env.pip = None
 
 
 @contextlib.contextmanager
@@ -51,6 +52,11 @@ def prompt(msg, default=None):
     if default:
         msg = '{msg} [{default}]'.format(msg=msg, default=default)
     return input(msg + ': ') or default or None
+
+
+def pip_install(*cmd):
+    """Run ``pip install`` on the currently active virtualenv"""
+    os.system(env.pip + ' install ' + ' '.join(cmd))
 
 
 def parse_args(arg_list=None, opt_arg_list=None):

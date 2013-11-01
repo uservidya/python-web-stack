@@ -28,9 +28,6 @@ server {
     def project_root(self):
         return os.path.join(self.containing_dir, self.project_name)
 
-    def pip_install(self, *cmd):
-        os.system('pip install ' + ' '.join(cmd))
-
     def setup(self):
         self.install()
         self.create_project()

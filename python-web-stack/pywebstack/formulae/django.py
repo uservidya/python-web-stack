@@ -3,7 +3,7 @@
 
 import os
 import re
-from ..utils import chdir
+from ..utils import chdir, pip_install, env
 from . import Formula
 
 
@@ -45,12 +45,16 @@ server {
         return conf
 
     def install(self):
-        self.pip_install('django')
+        pip_install('django')
 
     def create_project(self):
         with chdir(self.containing_dir):
-            os.system('django-admin.py startproject {name}'.format(
-                name=self.project_name
+            admin_script = os.path.join(
+                env.virtualenv_root, self.project_name,
+                'bin', 'django-admin.py'
+            )
+            os.system('{admin_script} startproject {name}'.format(
+                admin_script=admin_script, name=self.project_name
             ))
 
     def configure(self):
@@ -60,7 +64,7 @@ server {
         )
         serve_dir = os.path.abspath(os.path.join(self.containing_dir, 'serve'))
         os.mkdir(serve_dir)
-        with open(settings, 'rw') as f:
+        with open(settings, 'r') as f:
             s = f.read()
             s = re.sub(
                 r'STATIC_ROOT.+?\n',
@@ -76,4 +80,5 @@ server {
                 ),
                 s
             )
+        with open(settings, 'w') as f:
             f.write(s)
