@@ -2,6 +2,7 @@
 # -*- coding: utf-8
 
 import os
+from ..utils import chdir
 
 
 class Formula(object):
@@ -30,7 +31,8 @@ server {
 
     def setup(self):
         self.install()
-        self.create_project()
+        with chdir(self.containing_dir):
+            self.create_project()
         self.configure()
 
     def teardown(self):

@@ -7,7 +7,6 @@ import argparse
 import collections
 import contextlib
 import importlib
-from .formulae import Formula
 
 
 try:
@@ -95,6 +94,7 @@ def fill_opt_args(args, opt_arg_list):
 
 def get_formula_class(formula_name):
     module_name = formula_name.lower()
+    from .formulae import Formula
 
     try:
         module = importlib.import_module(

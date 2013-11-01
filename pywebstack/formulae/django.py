@@ -3,7 +3,7 @@
 
 import os
 import re
-from ..utils import chdir, pip_install, env
+from ..utils import pip_install, env
 from . import Formula
 
 
@@ -49,14 +49,13 @@ server {
         pip_install('django')
 
     def create_project(self):
-        with chdir(self.containing_dir):
-            admin_script = os.path.join(
-                env.virtualenv_root, self.project_name,
-                'bin', 'django-admin.py'
-            )
-            os.system('{admin_script} startproject {name}'.format(
-                admin_script=admin_script, name=self.project_name
-            ))
+        admin_script = os.path.join(
+            env.virtualenv_root, self.project_name,
+            'bin', 'django-admin.py'
+        )
+        os.system('{admin_script} startproject {name}'.format(
+            admin_script=admin_script, name=self.project_name
+        ))
 
     def configure(self):
         """Patch settings.py for nginx"""
