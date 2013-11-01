@@ -25,6 +25,7 @@ env = Environment()
 env.virtualenv_root = os.path.join(os.path.dirname(__file__), '..', 'envs')
 env.project_container_name = 'project'
 env.project_config_file_name = '.pywebstack.conf'
+env.startup_script_prefix = 'pywebstack_'
 env.pip = None      # Path to virtualenv pip. Provided at runtime in main()
 
 

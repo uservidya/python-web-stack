@@ -33,6 +33,13 @@ def add_nginx_conf(filename, content):
         os.symlink(os.path.join(available, filename), filename)
 
 
+def add_startup_conf(filename, content):
+    path = '/etc/init.d'
+    with chdir(path):
+        with open(filename, 'w') as f:
+            f.write(content)
+
+
 def setup(args):
     config = ConfigParser()
     config.add_section('Project')
@@ -58,17 +65,21 @@ def setup(args):
     add_nginx_conf(args.name, formula.get_nginx_conf(args.bind_to))
 
     # (Re-)starts the server
-    path, wsgi_module = formula.get_wsgi_env()
-    with chdir(path):
-        gunicorn = os.path.join(current_virtualenv, 'bin', 'gunicorn')
-        print(gunicorn)
-        os.system(
-            '{gunicorn} {module} '
-            '--bind={bind_to} --pid gunicorn.pid --daemon'.format(
-                gunicorn=gunicorn, module=wsgi_module, bind_to=args.bind_to
-            )
+    wsgi_root, wsgi_module = formula.get_wsgi_env()
+    gunicorn_command = (
+        '{gunicorn} {module} '
+        '--bind={bind_to} --pid gunicorn.pid --daemon'.format(
+            gunicorn=os.path.join(current_virtualenv, 'bin', 'gunicorn'),
+            module=wsgi_module, bind_to=args.bind_to
         )
-    # TODO: Write this command to /etc/init.d?
+    )
+    with chdir(wsgi_root):
+        os.system(gunicorn_command)
+
+    add_startup_conf(
+        env.startup_script_prefix + args.name,
+        'cd {root}; {cmd}'.format(root=wsgi_root, cmd=gunicorn_command)
+    )
     os.system('service nginx restart')
 
 

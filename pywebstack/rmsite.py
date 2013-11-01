@@ -6,9 +6,9 @@ import os
 import collections
 import shutil
 try:
-    from configparser import ConfigParser
+    from configparser import ConfigParser, NoSectionError
 except ImportError:     # Python 2 compatibility
-    from ConfigParser import SafeConfigParser as ConfigParser
+    from ConfigParser import SafeConfigParser as ConfigParser, NoSectionError
 from .utils import (
     parse_args, chdir, env, get_formula, UnrecognizedFormulaError
 )
@@ -16,7 +16,8 @@ from .utils import (
 
 def rm_virtualenv(name):
     with chdir(env.virtualenv_root):
-        shutil.rmtree(name)
+        if os.path.exists(name):
+            shutil.rmtree(name)
 
 
 def rm_nginx_conf(name):
@@ -31,6 +32,13 @@ def rm_nginx_conf(name):
             os.remove(name)
 
 
+def rm_startup_conf(filename):
+    path = '/etc/init.d'
+    with chdir(path):
+        if os.path.exists(filename):
+            os.remove(filename)
+
+
 def main():
     arg_list = collections.OrderedDict((
         ('name', 'name of site to remove'),
@@ -38,12 +46,15 @@ def main():
     args = parse_args(arg_list=arg_list)
 
     config = ConfigParser()
-    with chdir(os.path.join(env.virtualenv_root, args.name)):
-        config.read(env.project_config_file_name)
+    try:
+        with chdir(os.path.join(env.virtualenv_root, args.name)):
+            config.read(env.project_config_file_name)
+    except OSError:     # Happens if the virtualenv is faulty, etc.
+        pass
 
     try:
         formula = get_formula(config.get('Project', 'type', ''), args.name)
-    except UnrecognizedFormulaError:
+    except (UnrecognizedFormulaError, NoSectionError):
         formula = None
 
     if formula is not None:
@@ -55,7 +66,10 @@ def main():
             pass
         formula.teardown()
 
+    rm_startup_conf(env.startup_script_prefix + args.name)
+    rm_nginx_conf(args.name)
     rm_virtualenv(args.name)
+    os.system('service nginx restart')
 
 
 if __name__ == '__main__':
