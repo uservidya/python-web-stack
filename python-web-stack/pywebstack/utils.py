@@ -90,7 +90,9 @@ def get_formula_class(formula_name):
     module_name = formula_name.lower()
 
     try:
-        module = importlib.import_module(module_name, 'formulae')
+        module = importlib.import_module(
+            'pywebstack.formulae.{name}'.format(name=module_name)
+        )
         for name in reversed(dir(module)):
             if name.lower() == module_name:
                 klass = getattr(module, name)
@@ -104,9 +106,9 @@ def get_formula_class(formula_name):
     )
 
 
-def get_formula(formula_name, *args, **kwargs):
+def get_formula(formula_name, project_name):
     klass = get_formula_class(formula_name)
-    return klass(env=env, *args, **kwargs)
+    return klass(env, project_name)
 
 
 class UnrecognizedFormulaError(Exception):
