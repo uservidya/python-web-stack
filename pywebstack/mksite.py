@@ -20,13 +20,6 @@ def make_virtualenv(args):
             os.mkdir(env.project_container_name)
 
 
-def activate_virtualenv(args):
-    activate_script = os.path.join(
-        env.virtualenv_root, args.name, 'bin', 'activate_this.py'
-    )
-    exec(open(activate_script).read()) in {'__file__': activate_script}
-
-
 def add_nginx_conf(filename, content):
     available = '/etc/nginx/sites-available'
     enabled = '/etc/nginx/sites-enabled'
@@ -49,7 +42,6 @@ def setup(args):
 
     # Run environment setup
     make_virtualenv(args)
-    activate_virtualenv(args)
     pip_install('gunicorn')
 
     # Formula-specific setup
