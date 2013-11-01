@@ -1,4 +1,4 @@
-> Warning: This is more a spec to remind myself how to construct the project than a real README. Currently my priority is to hack together a workable prototype, so this document **may be seriously inaccurate**. Please don't rely on anything written here, including command usages and config structures, including others.
+> Warning: Currently my priority is to hack together a workable prototype, so this document may be inaccurate. Please don't rely on anything written here, including command usages and config structures, including others, without consulting the source code.
 
 # Python Web Stack
 
@@ -10,7 +10,7 @@ We'll build it with APT first. The stack consists of three parts: web server, WS
 
 ### Web Server
 
-Two choices here: Use the nginx provided by APT, or roll our own fork.
+Two choices here: Use the nginx provided by APT, or roll our own fork. I currently use the APT-based implementation, but think this may not be very suitable for other platforms. It's pretty difficult to maintain cross-platform compatibility when you need to configure system-based things. Maybe we'll need a seperate module for these platform-specific things (like what we're doing with formulae configurations).
 
 #### APT-Based
 
@@ -29,7 +29,7 @@ Two choices here: Use the nginx provided by APT, or roll our own fork.
     3. Installs PWS
     4. Do something
     5. Removes PWS
-  
+
     Now what do we do at 3. and 5.? If the user makes some incompatible configs in 2., we'll need to find them during 3., and maybe *save them* for reversion at 5.. APT's nginx uses `sites-available` and `sites-enabld` by default, so this may not be *that* much a problem, but still...
 
 #### Roll Our Own
@@ -60,26 +60,29 @@ I think the "ideal" way is to depend on `python-virtualenv`, but what will happe
 
 Two scripts (probably need better names):
 
-* `mksite`  
+* `mksite`
 * `rmsite`
 
 #### `mksite`
 
-`mksite django` create a new Django site. Can have `mksite flask`, `mksite pyramid`, etc..
+`mksite django proj` create a new Django site named `proj`. Can have `mksite flask proj`, `mksite pyramid proj`, etc..
 
-* Prompt for the project name.
+* Prompt for needed info.
 * Prompt for the location to store the project. (Needs a sensible default.)
+
+    This one is not currently implemented yet -- things are currently stored in the `envs` sub-directory. Will change, but where should this location be?
+
 * Create the project.
 * Create appropriate WSGI script if needed.
-* Create an appropriate Nginx config file in `sites-available` and link it to `sites-enabled`.
-* Create a Gunicorn config file. (Where should this go? A central storage like Nginx config, or inside each project?)
-* Create a owner in Postgres. Need to prompt for the owner's name (with a sensitive default; the project name maybe?). If the owner exists, use the existing one without creating.
-* Create a database. Need to prompt for the database name (with a sensitive default), and do not create if exists.
-* Might need to tweak some of the project's configuration. Django's `STATIC_ROOT` and `MEDIA_ROOT`, for example. Database configs will need to be changed, too.
-    
-Do we need to provide options to use a non-localhost database, even multiple databases? Maybe not...
 
-There might need to be an option to run gunicorn on a different port (using `--bind`). Default is 8000 which conflicts with Django's runserver, and will fail if you have multiple sites.
+    Not currently implemented, since Django does not need it. Will corretly (if needed) when we add more formulae.
+
+* Create a Gunicorn config file. (Where should this go? A central storage like Nginx config, or inside each project?)
+
+    Not currently implemented. Need to write a startup script, but where best to put it? `/etc/init.d` is fine if we use APT.
+
+* Create an appropriate Nginx config file in `sites-available` and link it to `sites-enabled`.
+* Tweak some of the project's configuration. Django's `STATIC_ROOT` and `MEDIA_ROOT`, for example.
 
 #### `rmsite`
 
@@ -99,11 +102,7 @@ There might need to be an option to run gunicorn on a different port (using `--b
 #### APT
 
 * nginx
-* postgresql-9.1
-* postgresql-server-dev-9.1
 
 #### PIP
 
 * gunicorn
-* psycopg2
-
