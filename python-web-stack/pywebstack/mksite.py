@@ -34,12 +34,15 @@ def setup(args):
     config.add_section('Project')
     config.set('Project', 'type', args.type)
 
+    formula = get_formula(args.type, args.name)
+
     # Run environment and database setup
+    make_virtualenv(args)
+    activate_virtualenv(args)
     os.system('pip install gunicorn psycopg2')
     setup_database(args)
 
     # Formula-specific setup
-    formula = get_formula(args.type, args.name)
     formula.setup()
 
     # Starts the server
@@ -67,9 +70,6 @@ def main():
     ))
     args = parse_args(arg_list, opt_arg_list)
     args = fill_opt_args(args, opt_arg_list)
-
-    make_virtualenv(args)
-    activate_virtualenv(args)
     setup(args)
 
 

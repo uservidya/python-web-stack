@@ -2,13 +2,12 @@
 # -*- coding: utf-8
 
 import os
-from ..utils import env
 
 
 class Formula(object):
     """Abstract formula interface to be inherited by concrete formula classes
     """
-    def __init__(self, project_name):
+    def __init__(self, env, project_name):
         self.project_name = project_name
         self.containing_dir = os.path.join(
             env.virtualenv_root, project_name, env.project_container_name

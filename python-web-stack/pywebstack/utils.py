@@ -6,6 +6,8 @@ import sys
 import argparse
 import collections
 import contextlib
+import importlib
+from .formulae import Formula
 
 
 try:
@@ -85,20 +87,26 @@ def fill_opt_args(args, opt_arg_list):
 
 
 def get_formula_class(formula_name):
-    name = formula_name.lower()
+    module_name = formula_name.lower()
 
-    if name == 'django':
-        from .formulae.django import Django
-        return Django
+    try:
+        module = importlib.import_module(module_name, 'formulae')
+        for name in reversed(dir(module)):
+            if name.lower() == module_name:
+                klass = getattr(module, name)
+                if issubclass(klass, Formula) and klass is not Formula:
+                    return klass
+    except (ImportError, AttributeError):
+        pass    # Go to exception at the bottom
 
     raise UnrecognizedFormulaError(
-        'Unrecognized formula: {name}'.format(formula_name)
+        'Unrecognized formula: {name}'.format(name=formula_name)
     )
 
 
 def get_formula(formula_name, *args, **kwargs):
     klass = get_formula_class(formula_name)
-    return klass(*args, **kwargs)
+    return klass(env=env, *args, **kwargs)
 
 
 class UnrecognizedFormulaError(Exception):
