@@ -14,7 +14,7 @@ server {
     listen 80;
 
     location / {
-        proxy_pass http://%(bind_to)s;
+        proxy_pass http://127.0.0.1:%(bind_to)s;
     }
 }
     """

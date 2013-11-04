@@ -68,7 +68,7 @@ def setup(args):
     wsgi_root, wsgi_module = formula.get_wsgi_env()
     gunicorn_command = (
         '{gunicorn} {module} '
-        '--bind={bind_to} --pid gunicorn.pid --daemon'.format(
+        '--bind=127.0.0.1:{bind_to} --pid gunicorn.pid --daemon'.format(
             gunicorn=os.path.join(current_virtualenv, 'bin', 'gunicorn'),
             module=wsgi_module, bind_to=args.bind_to
         )
@@ -89,7 +89,7 @@ def main():
         ('name', ('name of site',)),
     ))
     opt_arg_list = collections.OrderedDict((
-        ('bind_to', ('where to bind Gunicorn', '127.0.0.1:8001')),
+        ('bind_to', ('port to bind Gunicorn', '8001')),
     ))
     args = parse_args(arg_list, opt_arg_list)
     args = fill_opt_args(args, opt_arg_list)
