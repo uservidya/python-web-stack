@@ -14,16 +14,16 @@ class Django(Formula):
 server {
     listen 80;
 
-    location / {
+    location %(server_root)s {
         proxy_pass http://127.0.0.1:%(bind_to)s;
     }
 
-    location /static/ {
+    location %(server_root)sstatic/ {
         autoindex on;
         alias %(static_root)s;
     }
 
-    location /media/ {
+    location %(server_root)smedia/ {
         autoindex on;
         alias %(media_root)s;
     }
@@ -36,12 +36,13 @@ server {
             '{name}.wsgi:application'.format(name=self.project_name)
         )
 
-    def get_nginx_conf(self, bind_to):
+    def get_nginx_conf(self, args):
         serve_dir = os.path.abspath(os.path.join(self.containing_dir, 'serve'))
         conf = self.nginx_conf % {
             'static_root': os.path.join(serve_dir, 'static'),
             'media_root': os.path.join(serve_dir, 'media'),
-            'bind_to': bind_to
+            'bind_to': args.bind_to,
+            'server_root': args.server_root
         }
         return conf
 

@@ -13,7 +13,7 @@ class Formula(object):
 server {
     listen 80;
 
-    location / {
+    location %(server_root)s {
         proxy_pass http://127.0.0.1:%(bind_to)s;
     }
 }
@@ -50,14 +50,15 @@ server {
         """
         raise NotImplementedError()
 
-    def get_nginx_conf(self, bind_to):
+    def get_nginx_conf(self, args):
         """Provide nginx configuration
 
-        :param bind_to: where Gunicorn is bind_to to
-        :type bind_to: str
+        :param args: arguments received from the setup command
         :rtype: str
         """
-        return self.nginx_conf % {'bind_to': bind_to}
+        return self.nginx_conf % {
+            'bind_to': args.bind_to, 'server_root': args.server_root
+        }
 
     def install(self):
         raise NotImplementedError()

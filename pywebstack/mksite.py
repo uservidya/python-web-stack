@@ -60,7 +60,7 @@ def setup(formula, args):
             config.write(f)
 
     # Setup nginx
-    add_nginx_conf(args.name, formula.get_nginx_conf(args.bind_to))
+    add_nginx_conf(args.name, formula.get_nginx_conf(args))
 
     # (Re-)starts the server
     gunicorn_command = (
@@ -86,6 +86,7 @@ def main():
     ))
     opt_arg_list = collections.OrderedDict((
         ('bind_to', ('port to bind Gunicorn', '8001')),
+        ('server_root', ('root URL of the web server', '/')),
         ('wsgi_root', (
             'where Gunicorn loads your WSGI module',
             lambda args: get_formula(args.type, args.name).get_wsgi_env()[0]
@@ -108,6 +109,12 @@ def main():
 
     # Prompt for some other needed fields
     args = fill_opt_args(args, opt_arg_list)
+
+    # Be sensitive and fix leading and trailing slashes
+    if not env.server_root.endswith('/'):
+        env.server_root = env.server_root + '/'
+    if not env.server_root.startswith('/'):
+        env.server_root = '/' + env.server_root
 
     # Establish environment
     env.pip = os.path.join(env.virtualenv_root, args.name, 'bin', 'pip')
