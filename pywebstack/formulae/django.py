@@ -3,7 +3,7 @@
 
 import os
 import re
-from ..utils import pip_install, env
+from ..utils import pip_install, env, run
 from . import Formula
 
 
@@ -54,9 +54,10 @@ server {
             env.virtualenv_root, self.project_name,
             'bin', 'django-admin.py'
         )
-        os.system('{admin_script} startproject {name}'.format(
+        cmd = '{admin_script} startproject {name}'.format(
             admin_script=admin_script, name=self.project_name
-        ))
+        )
+        run(cmd)
 
     def configure(self):
         """Patch settings.py for nginx"""

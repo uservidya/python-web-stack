@@ -54,9 +54,22 @@ def prompt(msg, default=None):
     return input(msg + ': ') or default or None
 
 
+def run(cmd, quiet=False):
+    """Run a command with os.system"""
+    if not quiet:
+        print('Running {cmd}'.format(cmd=cmd))
+    os.system(cmd)
+
+
 def pip_install(*cmd):
     """Run ``pip install`` on the currently active virtualenv"""
-    os.system(env.pip + ' install ' + ' '.join(cmd))
+    cmds = ' '.join(cmd)
+    print('Running pip install {cmds}'.format(cmds=cmds))
+    run(env.pip + ' install -q ' + cmds, quiet=True)
+
+
+def reload_nginx():
+    run('service nginx restart', quiet=True)
 
 
 def parse_args(arg_list=None, opt_arg_list=None):

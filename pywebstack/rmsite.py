@@ -10,11 +10,13 @@ try:
 except ImportError:     # Python 2 compatibility
     from ConfigParser import SafeConfigParser as ConfigParser, NoSectionError
 from .utils import (
-    parse_args, chdir, env, get_formula, UnrecognizedFormulaError
+    parse_args, chdir, env, get_formula, UnrecognizedFormulaError, run,
+    reload_nginx
 )
 
 
 def rm_virtualenv(name):
+    print('Removing virtualenv...')
     with chdir(env.virtualenv_root):
         if os.path.exists(name):
             shutil.rmtree(name)
@@ -24,6 +26,7 @@ def rm_nginx_conf(name):
     available = '/etc/nginx/sites-available'    # TODO: DRY (with mksite.py)
     enabled = '/etc/nginx/sites-enabled'
 
+    print('Removing nginx configuration files...')
     with chdir(enabled):
         if os.path.exists(name):
             os.remove(name)
@@ -34,9 +37,21 @@ def rm_nginx_conf(name):
 
 def rm_startup_conf(filename):
     path = '/etc/init.d'
+
+    print('Removing startup scripts...')
     with chdir(path):
         if os.path.exists(filename):
             os.remove(filename)
+
+
+def kill_gunicorn(formula):
+    print('Killing Gunicorn daemon...')
+    try:
+        pid_file = os.path.join(formula.containing_dir, 'gunicorn.pid')
+        with open(pid_file, 'r') as f:
+            run('kill {pid}'.format(pid=f.read()), quiet=True)
+    except IOError:     # No gunicorn.pid, which is alright
+        print('Warning: Gunicorn PID file not found.')
 
 
 def main():
@@ -59,18 +74,13 @@ def main():
         formula = None
 
     if formula is not None:
-        try:
-            pid_file = os.path.join(formula.containing_dir, 'gunicorn.pid')
-            with open(pid_file, 'r') as f:
-                os.system('kill {pid}'.format(pid=f.read()))
-        except IOError:     # No gunicorn.pid, which is alright
-            print('Warning: Gunicorn PID file not found.')
+        kill_gunicorn(formula)
         formula.teardown()
 
     rm_startup_conf(env.startup_script_prefix + args.name)
     rm_nginx_conf(args.name)
     rm_virtualenv(args.name)
-    os.system('service nginx restart')
+    reload_nginx()
 
 
 if __name__ == '__main__':

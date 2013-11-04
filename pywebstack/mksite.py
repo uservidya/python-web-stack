@@ -9,14 +9,17 @@ try:
 except ImportError:     # Python 2 compatibility
     from ConfigParser import SafeConfigParser as ConfigParser
 from .utils import (
-    chdir, parse_args, fill_opt_args, env, get_formula, pip_install
+    chdir, parse_args, fill_opt_args, env, get_formula, pip_install, run,
+    reload_nginx
 )
 
 
 def make_virtualenv(args):
+    name = args.name
+    print('Making virtualenv {name}...'.format(name=name))
     with chdir(env.virtualenv_root):
-        os.system('virtualenv {name}'.format(name=args.name))
-        with chdir(args.name):
+        run('virtualenv -q {name}'.format(name=name), quiet=True)
+        with chdir(name):
             os.mkdir(env.project_container_name)
 
 
@@ -24,17 +27,23 @@ def add_nginx_conf(filename, content):
     available = '/etc/nginx/sites-available'
     enabled = '/etc/nginx/sites-enabled'
 
-    with chdir(available):
-        with open(filename, 'w') as f:
-            f.write(content)
+    available_filename = os.path.join(available, filename)
+
+    print('Adding nginx configuration at {n}...'.format(n=available_filename))
+    with open(available_filename, 'w') as f:
+        f.write(content)
+
+    print('Linking {filename} as enabled...'.format(filename=filename))
     with chdir(enabled):
         if os.path.exists(filename):
             os.remove(filename)
-        os.symlink(os.path.join(available, filename), filename)
+        os.symlink(available_filename, filename)
 
 
 def add_startup_conf(filename, content):
     path = '/etc/init.d'
+
+    print('Adding Gunicorn daemon to startup script...')
     with chdir(path):
         with open(filename, 'w') as f:
             f.write(content)
@@ -63,20 +72,24 @@ def setup(formula, args):
     add_nginx_conf(args.name, formula.get_nginx_conf(args))
 
     # (Re-)starts the server
+    bind_to = '127.0.0.1:{bind_to}'.format(bind_to=args.bind_to)
     gunicorn_command = (
-        '{gunicorn} {module} -D -b 127.0.0.1:{bind_to} -p {pid_file}'.format(
+        '{gunicorn} {module} -D -b {bind_to} -p {pid_file}'.format(
             gunicorn=os.path.join(current_virtualenv, 'bin', 'gunicorn'),
-            module=args.wsgi_path, bind_to=args.bind_to,
+            module=args.wsgi_path, bind_to=bind_to,
             pid_file=os.path.join(formula.containing_dir, 'gunicorn.pid')
         )
     )
+
+    print('Starting Gunicorn daemon on {bind_to}...'.format(bind_to=bind_to))
     with chdir(args.wsgi_root):
-        os.system(gunicorn_command)
+        run(gunicorn_command, quiet=True)
+
     add_startup_conf(
         env.startup_script_prefix + args.name,
         'cd {root}; {cmd}'.format(root=args.wsgi_root, cmd=gunicorn_command)
     )
-    os.system('service nginx restart')
+    reload_nginx()
 
 
 def main():
@@ -111,10 +124,10 @@ def main():
     args = fill_opt_args(args, opt_arg_list)
 
     # Be sensitive and fix leading and trailing slashes
-    if not env.server_root.endswith('/'):
-        env.server_root = env.server_root + '/'
-    if not env.server_root.startswith('/'):
-        env.server_root = '/' + env.server_root
+    if not args.server_root.endswith('/'):
+        args.server_root = args.server_root + '/'
+    if not args.server_root.startswith('/'):
+        args.server_root = '/' + args.server_root
 
     # Establish environment
     env.pip = os.path.join(env.virtualenv_root, args.name, 'bin', 'pip')
