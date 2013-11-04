@@ -50,16 +50,6 @@ server {
         """
         raise NotImplementedError()
 
-    def get_nginx_conf(self, args):
-        """Provide nginx configuration
-
-        :param args: arguments received from the setup command
-        :rtype: str
-        """
-        return self.nginx_conf % {
-            'bind_to': args.bind_to, 'server_root': args.server_root
-        }
-
     def install(self):
         raise NotImplementedError()
 
@@ -73,3 +63,13 @@ server {
 
     def deconfigure(self):
         pass
+
+    def get_nginx_conf(self, args):
+        """Provide nginx configuration
+
+        :param args: arguments received from the setup command
+        :rtype: str
+        """
+        return self.nginx_conf % {
+            'bind_to': args.bind_to, 'server_root': args.server_root
+        }
