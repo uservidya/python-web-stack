@@ -50,7 +50,8 @@ def main():
         with chdir(os.path.join(env.virtualenv_root, args.name)):
             config.read(env.project_config_file_name)
     except OSError:     # Happens if the virtualenv is faulty, etc.
-        pass
+        print('Warning: Cannot load project configuration. '
+              'Removal may be incomplete.')
 
     try:
         formula = get_formula(config.get('Project', 'type', ''), args.name)
@@ -59,11 +60,11 @@ def main():
 
     if formula is not None:
         try:
-            with chdir(formula.get_wsgi_env()[0]):
-                with open('gunicorn.pid', 'r') as f:
-                    os.system('kill {pid}'.format(pid=f.read()))
+            pid_file = os.path.join(formula.containing_dir, 'gunicorn.pid')
+            with open(pid_file, 'r') as f:
+                os.system('kill {pid}'.format(pid=f.read()))
         except IOError:     # No gunicorn.pid, which is alright
-            pass
+            print('Warning: Gunicorn PID file not found.')
         formula.teardown()
 
     rm_startup_conf(env.startup_script_prefix + args.name)

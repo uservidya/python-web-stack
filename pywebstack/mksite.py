@@ -40,12 +40,10 @@ def add_startup_conf(filename, content):
             f.write(content)
 
 
-def setup(args):
+def setup(formula, args):
     config = ConfigParser()
     config.add_section('Project')
     config.set('Project', 'type', args.type)
-
-    formula = get_formula(args.type, args.name)
 
     # Run environment setup
     make_virtualenv(args)
@@ -65,20 +63,18 @@ def setup(args):
     add_nginx_conf(args.name, formula.get_nginx_conf(args.bind_to))
 
     # (Re-)starts the server
-    wsgi_root, wsgi_module = formula.get_wsgi_env()
     gunicorn_command = (
-        '{gunicorn} {module} '
-        '--bind=127.0.0.1:{bind_to} --pid gunicorn.pid --daemon'.format(
+        '{gunicorn} {module} -D -b 127.0.0.1:{bind_to} -p {pid_file}'.format(
             gunicorn=os.path.join(current_virtualenv, 'bin', 'gunicorn'),
-            module=wsgi_module, bind_to=args.bind_to
+            module=args.wsgi_path, bind_to=args.bind_to,
+            pid_file=os.path.join(formula.containing_dir, 'gunicorn.pid')
         )
     )
-    with chdir(wsgi_root):
+    with chdir(args.wsgi_root):
         os.system(gunicorn_command)
-
     add_startup_conf(
         env.startup_script_prefix + args.name,
-        'cd {root}; {cmd}'.format(root=wsgi_root, cmd=gunicorn_command)
+        'cd {root}; {cmd}'.format(root=args.wsgi_root, cmd=gunicorn_command)
     )
     os.system('service nginx restart')
 
@@ -90,12 +86,34 @@ def main():
     ))
     opt_arg_list = collections.OrderedDict((
         ('bind_to', ('port to bind Gunicorn', '8001')),
+        ('wsgi_root', (
+            'where Gunicorn loads your WSGI module',
+            lambda args: get_formula(args.type, args.name).get_wsgi_env()[0]
+        )),
+        ('wsgi_path', (
+            'path Gunicorn uses to import the WSGI module',
+            lambda args: get_formula(args.type, args.name).get_wsgi_env()[1]
+        ))
     ))
     args = parse_args(arg_list, opt_arg_list)
+
+    formula = get_formula(args.type, args.name)
+
+    # Fill the WSGI info first (don't prompt the user; just use default values)
+    wsgi_env = formula.get_wsgi_env()
+    if args.wsgi_root is None:
+        args.wsgi_root = wsgi_env[0]
+    if args.wsgi_path is None:
+        args.wsgi_path = wsgi_env[1]
+
+    # Prompt for some other needed fields
     args = fill_opt_args(args, opt_arg_list)
 
+    # Establish environment
     env.pip = os.path.join(env.virtualenv_root, args.name, 'bin', 'pip')
-    setup(args)
+
+    # Start setup
+    setup(formula, args)
 
 
 if __name__ == '__main__':
