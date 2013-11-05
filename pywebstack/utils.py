@@ -21,8 +21,12 @@ class Environment(object):
 
 # Some constants
 env = Environment()
-env.virtualenv_root = os.path.join(os.path.dirname(__file__), '..', 'envs')
-env.template_root = os.path.join(os.path.dirname(__file__), '..', 'templates')
+env.virtualenv_root = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), '..', 'envs')
+)
+env.template_root = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), '..', 'templates')
+)
 env.project_container_name = 'project'
 env.project_config_file_name = '.pywebstack.conf'
 env.startup_script_prefix = 'pywebstack_'
