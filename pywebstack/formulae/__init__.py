@@ -2,6 +2,7 @@
 # -*- coding: utf-8
 
 import os
+import collections
 from ..utils import chdir
 
 
@@ -74,6 +75,20 @@ server {
 
     def deconfigure(self):
         pass
+
+    def get_prompts(self):
+        """Provide extra prompts for ``mksite``
+
+        :returns: a ``dict``-like instance. Can be ``collections.OrderedDict``
+            if you wish to force ordering or prompts. The values will be
+            injected into ``args`` with the key of each item. The value of each
+            item should be a 2-tuple, specifying the text used when prompting,
+            and a default value (or ``None`` if you don't want defaults). The
+            second item can be a callable, in which case the default value
+            will be the return value by calling it with ``args`` as the only
+            argument.
+        """
+        return collections.OrderedDict()
 
     def get_nginx_conf(self, args):
         """Provide nginx configuration
