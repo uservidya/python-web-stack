@@ -9,7 +9,8 @@ try:
 except ImportError:     # Python 2 compatibility
     from ConfigParser import SafeConfigParser as ConfigParser
 from .utils import (
-    chdir, parse_args, fill_opt_args, env, get_formula, run, reload_nginx
+    chdir, parse_args, fill_opt_args, env, get_formula, run, pip_install,
+    reload_nginx
 )
 
 
@@ -55,6 +56,7 @@ def setup(formula, args):
 
     # Run environment setup
     make_virtualenv(args)
+    pip_install('uwsgi')
 
     # Formula-specific setup
     formula.setup()
@@ -78,11 +80,13 @@ def setup(formula, args):
             args, pid_file=pid_file, log_file=log_file
         ))
 
+    uwsgi = os.path.join(current_virtualenv, 'bin', 'uwsgi')
     cmd_args = (
-        '--master', '--vacuum', '--uid=1000', '--gid=2000', '--plugin=python'
+        '--master', '--vacuum', '--uid={uid}', '--gid={gid}'
     )
-    cmd = 'uwsgi --ini {ini_file} {cmd_args}'.format(
-        ini_file=ini_file, cmd_args=' '.join(cmd_args)
+    cmd = '{uwsgi} --ini {ini_file} {cmd_args}'.format(
+        uwsgi=uwsgi, ini_file=ini_file, cmd_args=' '.join(cmd_args),
+        uid=args.uid, gid=args.gid
     )
     print('Starting daemon...')
     run(cmd)
@@ -106,7 +110,9 @@ def main():
         ('wsgi_path', (
             'Python path used by the app server to import the WSGI module',
             lambda args: get_formula(args.type, args.name).get_wsgi_env()[1]
-        ))
+        )),
+        ('uid', ('User ID for uWSGI worker', '1000')),
+        ('gid', ('Group ID for uWSGI worker', '2000')),
     ))
     args = parse_args(arg_list, opt_arg_list)
 

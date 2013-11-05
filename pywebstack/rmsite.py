@@ -46,7 +46,11 @@ def rm_startup_conf(filename):
 
 def kill_appserver(formula):
     print('Stopping server instance...')
-    cmd = 'uwsgi --stop {pid_file}'.format(
+    uwsgi = os.path.join(
+        env.virtualenv_root, formula.project_name, 'bin', 'uwsgi'
+    )
+    cmd = '{uwsgi} --stop {pid_file}'.format(
+        uwsgi=uwsgi,
         pid_file=os.path.join(formula.containing_dir, 'uwsgi.pid')
     )
     run(cmd)

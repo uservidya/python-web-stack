@@ -46,7 +46,7 @@ Two choices here: Use the nginx provided by APT, or roll our own fork. I current
 
 ### WSGI Server
 
-virtualenv + Gunicorn (inside env). Don't use supervisor for now because I want to have as much flexibility to a Windows port as possible.
+virtualenv + uWSGI (inside env). Don't use supervisor for now because I want to have as much flexibility to a Windows port as possible.
 
 #### No virtualenvwrapper?
 
@@ -77,7 +77,7 @@ Two scripts (probably need better names):
 
     Not currently implemented, since Django does not need it. Will corretly (if needed) when we add more formulae.
 
-* Create a Gunicorn config file. (Where should this go? A central storage like Nginx config, or inside each project?)
+* Create a app server config file. (Where should this go? A central storage like Nginx config, or inside each project?)
 
     Not currently implemented. Need to write a startup script, but where best to put it? `/etc/init.d` is fine if we use APT.
 
@@ -101,6 +101,5 @@ Two scripts (probably need better names):
 
 #### APT
 
-* nginx
-* uwsgi
-* uwsgi-plugin-python
+* install nginx
+* build-deps uwsgi (we'll install it with PIP ourselves)
