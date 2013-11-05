@@ -44,14 +44,12 @@ def rm_startup_conf(filename):
             os.remove(filename)
 
 
-def kill_gunicorn(formula):
-    print('Killing Gunicorn daemon...')
-    try:
-        pid_file = os.path.join(formula.containing_dir, 'gunicorn.pid')
-        with open(pid_file, 'r') as f:
-            run('kill {pid}'.format(pid=f.read()), quiet=True)
-    except IOError:     # No gunicorn.pid, which is alright
-        print('Warning: Gunicorn PID file not found.')
+def kill_appserver(formula):
+    print('Stopping server instance...')
+    cmd = 'uwsgi --stop {pid_file}'.format(
+        pid_file=os.path.join(formula.containing_dir, 'uwsgi.pid')
+    )
+    run(cmd)
 
 
 def main():
@@ -74,7 +72,7 @@ def main():
         formula = None
 
     if formula is not None:
-        kill_gunicorn(formula)
+        kill_appserver(formula)
         formula.teardown()
 
     rm_startup_conf(env.startup_script_prefix + args.name)

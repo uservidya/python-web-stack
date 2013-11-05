@@ -102,7 +102,5 @@ Two scripts (probably need better names):
 #### APT
 
 * nginx
-
-#### PIP
-
-* gunicorn
+* uwsgi
+* uwsgi-plugin-python

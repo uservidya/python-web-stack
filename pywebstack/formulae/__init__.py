@@ -19,7 +19,13 @@ server {
 }
     """
 
-    def __init__(self, env, project_name):
+    def __init__(self, formula_name, env, project_name):
+        self.formula_name = formula_name
+        self.template_dir = os.path.normpath(os.path.join(
+            os.path.dirname(__file__),
+            '..', '..', 'templates',
+            self.formula_name
+        ))
         self.project_name = project_name
         self.containing_dir = os.path.join(
             env.virtualenv_root, project_name, env.project_container_name
@@ -28,6 +34,11 @@ server {
     @property
     def project_root(self):
         return os.path.join(self.containing_dir, self.project_name)
+
+    def get_template(self, filename):
+        with open(os.path.join(self.template_dir, filename), 'r') as f:
+            content = f.read()
+        return content
 
     def setup(self):
         self.install()
@@ -41,13 +52,17 @@ server {
     # The following methods MUST be implemented
 
     def get_wsgi_env(self):
-        """Provide needed information about WSGI for Gunicorn
+        """Provide needed information about WSGI for the app server
 
         :returns: A 2-tuple. The first item indicates the directory to be when
-            Gunicorn initiates the WSGI application. This is also where the
-            Gunicorn PID file resides. The second item is the module path to
-            the application.
+            the server initiates the WSGI application. This is also where the
+            PID file resides. The second item is the Python module path to the
+            application instance.
         """
+        raise NotImplementedError()
+
+    def get_uwsgi_conf(self, args, **kwargs):
+        """Provide configuration content for uWSGI"""
         raise NotImplementedError()
 
     def install(self):

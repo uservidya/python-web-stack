@@ -9,8 +9,7 @@ try:
 except ImportError:     # Python 2 compatibility
     from ConfigParser import SafeConfigParser as ConfigParser
 from .utils import (
-    chdir, parse_args, fill_opt_args, env, get_formula, pip_install, run,
-    reload_nginx
+    chdir, parse_args, fill_opt_args, env, get_formula, run, reload_nginx
 )
 
 
@@ -43,7 +42,7 @@ def add_nginx_conf(filename, content):
 def add_startup_conf(filename, content):
     path = '/etc/init.d'
 
-    print('Adding Gunicorn daemon to startup script...')
+    print('Adding app server to startup script...')
     with chdir(path):
         with open(filename, 'w') as f:
             f.write(content)
@@ -56,7 +55,6 @@ def setup(formula, args):
 
     # Run environment setup
     make_virtualenv(args)
-    pip_install('gunicorn')
 
     # Formula-specific setup
     formula.setup()
@@ -71,24 +69,25 @@ def setup(formula, args):
     # Setup nginx
     add_nginx_conf(args.name, formula.get_nginx_conf(args))
 
-    # (Re-)starts the server
-    bind_to = '127.0.0.1:{bind_to}'.format(bind_to=args.bind_to)
-    gunicorn_command = (
-        '{gunicorn} {module} -D -b {bind_to} -p {pid_file}'.format(
-            gunicorn=os.path.join(current_virtualenv, 'bin', 'gunicorn'),
-            module=args.wsgi_path, bind_to=bind_to,
-            pid_file=os.path.join(formula.containing_dir, 'gunicorn.pid')
-        )
-    )
+    # Setup uWSGI
+    ini_file = os.path.join(formula.containing_dir, 'uwsgi.ini')
+    pid_file = os.path.join(formula.containing_dir, 'uwsgi.pid')
+    log_file = os.path.join(formula.containing_dir, 'uwsgi.log')
+    with open(ini_file, 'w') as f:
+        f.write(formula.get_uwsgi_conf(
+            args, pid_file=pid_file, log_file=log_file
+        ))
 
-    print('Starting Gunicorn daemon on {bind_to}...'.format(bind_to=bind_to))
-    with chdir(args.wsgi_root):
-        run(gunicorn_command, quiet=True)
-
-    add_startup_conf(
-        env.startup_script_prefix + args.name,
-        'cd {root}; {cmd}'.format(root=args.wsgi_root, cmd=gunicorn_command)
+    cmd_args = (
+        '--master', '--vacuum', '--uid=1000', '--gid=2000', '--plugin=python'
     )
+    cmd = 'uwsgi --ini {ini_file} {cmd_args}'.format(
+        ini_file=ini_file, cmd_args=' '.join(cmd_args)
+    )
+    print('Starting daemon...')
+    run(cmd)
+
+    add_startup_conf(env.startup_script_prefix + args.name, cmd)
     reload_nginx()
 
 
@@ -98,14 +97,14 @@ def main():
         ('name', ('name of site',)),
     ))
     opt_arg_list = collections.OrderedDict((
-        ('bind_to', ('port to bind Gunicorn', '8001')),
+        ('bind_to', ('port to bind the app server', '8001')),
         ('server_root', ('root URL of the web server', '/')),
         ('wsgi_root', (
-            'where Gunicorn loads your WSGI module',
+            'where the app server starts loading your WSGI module',
             lambda args: get_formula(args.type, args.name).get_wsgi_env()[0]
         )),
         ('wsgi_path', (
-            'path Gunicorn uses to import the WSGI module',
+            'Python path used by the app server to import the WSGI module',
             lambda args: get_formula(args.type, args.name).get_wsgi_env()[1]
         ))
     ))

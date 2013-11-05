@@ -128,7 +128,7 @@ def get_formula_class(formula_name):
 
 def get_formula(formula_name, project_name):
     klass = get_formula_class(formula_name)
-    return klass(env, project_name)
+    return klass(formula_name, env, project_name)
 
 
 class UnrecognizedFormulaError(Exception):
