@@ -14,8 +14,8 @@ from .utils import (
 )
 
 
-def make_virtualenv(args):
-    name = args.name
+def make_virtualenv(cl_args):
+    name = cl_args.name
     print('Making virtualenv {name}...'.format(name=name))
     with chdir(env.virtualenv_root):
         run('virtualenv -q {name}'.format(name=name), quiet=True)
@@ -49,17 +49,17 @@ def add_startup_conf(filename, content):
             f.write(content)
 
 
-def add_uwsgi_ini(args, formula):
+def add_uwsgi_ini(cl_args, formula):
     ini_file = os.path.join(formula.containing_dir, 'uwsgi.ini')
     pid_file = os.path.join(formula.containing_dir, 'uwsgi.pid')
     log_file = os.path.join(formula.containing_dir, 'uwsgi.log')
     with open(os.path.join(env.template_root, 'uwsgi.ini')) as f:
         content = f.read() % {
-            'wsgi_root': args.wsgi_root,
-            'wsgi_path': args.wsgi_path,
-            'bind_to': args.bind_to,
-            'uid': args.uid,
-            'gid': args.gid,
+            'wsgi_root': cl_args.wsgi_root,
+            'wsgi_path': cl_args.wsgi_path,
+            'bind_to': cl_args.bind_to,
+            'uid': cl_args.uid,
+            'gid': cl_args.gid,
             'pid_file': pid_file,
             'log_file': log_file
         }
@@ -68,19 +68,19 @@ def add_uwsgi_ini(args, formula):
     return ini_file
 
 
-def setup(formula, args):
+def setup(formula, cl_args):
     config = ConfigParser()
     config.add_section('Project')
-    config.set('Project', 'type', args.type)
+    config.set('Project', 'type', cl_args.type)
 
     # Run environment setup
-    make_virtualenv(args)
+    make_virtualenv(cl_args)
     pip_install('uwsgi')
 
     # Formula-specific setup
-    formula.setup()
+    formula.setup(cl_args)
 
-    current_virtualenv = os.path.join(env.virtualenv_root, args.name)
+    current_virtualenv = os.path.join(env.virtualenv_root, cl_args.name)
 
     # Secretly put the config file inside virtualenv to store project info
     with chdir(current_virtualenv):
@@ -88,17 +88,17 @@ def setup(formula, args):
             config.write(f)
 
     # Setup nginx
-    add_nginx_conf(args.name, formula.get_nginx_conf(args))
+    add_nginx_conf(cl_args.name, formula.get_nginx_conf(cl_args))
 
     # Setup uWSGI
-    ini_file = add_uwsgi_ini(args, formula)
+    ini_file = add_uwsgi_ini(cl_args, formula)
 
     uwsgi = os.path.join(current_virtualenv, 'bin', 'uwsgi')
     cmd = '{uwsgi} --ini {ini_file}'.format(uwsgi=uwsgi, ini_file=ini_file)
     print('Starting daemon...')
     run(cmd, quiet=True)
 
-    add_startup_conf(env.startup_script_prefix + args.name, cmd)
+    add_startup_conf(env.startup_script_prefix + cl_args.name, cmd)
     reload_nginx()
 
 
@@ -121,32 +121,32 @@ def main():
         ('uid', ('user ID for uWSGI worker', '1000')),
         ('gid', ('group ID for uWSGI worker', '2000')),
     ))
-    args = parse_args(arg_list, opt_arg_list)
+    cl_args = parse_args(arg_list, opt_arg_list)
 
-    formula = get_formula(args.type, args.name)
+    formula = get_formula(cl_args.type, cl_args.name)
 
     # Fill the WSGI info first (don't prompt the user; just use default values)
     wsgi_env = formula.get_wsgi_env()
-    if args.wsgi_root is None:
-        args.wsgi_root = wsgi_env[0]
-    if args.wsgi_path is None:
-        args.wsgi_path = wsgi_env[1]
+    if cl_args.wsgi_root is None:
+        cl_args.wsgi_root = wsgi_env[0]
+    if cl_args.wsgi_path is None:
+        cl_args.wsgi_path = wsgi_env[1]
 
     # Prompt for some other needed fields
     opt_arg_list.update(formula.get_prompts)
-    args = fill_opt_args(args, opt_arg_list)
+    cl_args = fill_opt_args(cl_args, opt_arg_list)
 
     # Be sensitive and fix leading and trailing slashes
-    if not args.server_root.endswith('/'):
-        args.server_root = args.server_root + '/'
-    if not args.server_root.startswith('/'):
-        args.server_root = '/' + args.server_root
+    if not cl_args.server_root.endswith('/'):
+        cl_args.server_root = cl_args.server_root + '/'
+    if not cl_args.server_root.startswith('/'):
+        cl_args.server_root = '/' + cl_args.server_root
 
     # Establish environment
-    env.pip = os.path.join(env.virtualenv_root, args.name, 'bin', 'pip')
+    env.pip = os.path.join(env.virtualenv_root, cl_args.name, 'bin', 'pip')
 
     # Start setup
-    setup(formula, args)
+    setup(formula, cl_args)
 
 
 if __name__ == '__main__':

@@ -21,6 +21,7 @@ server {
     """
 
     def __init__(self, formula_name, env, project_name):
+        self.env = env
         self.formula_name = formula_name
         self.template_dir = os.path.normpath(os.path.join(
             os.path.dirname(__file__),
@@ -41,14 +42,14 @@ server {
             content = f.read()
         return content
 
-    def setup(self):
-        self.install()
+    def setup(self, cl_args):
+        self.install(cl_args)
         with chdir(self.containing_dir):
-            self.create_project()
-        self.configure()
+            self.create_project(cl_args)
+        self.configure(cl_args)
 
-    def teardown(self):
-        self.deconfigure()
+    def teardown(self, cl_args):
+        self.deconfigure(cl_args)
 
     # The following methods MUST be implemented
 
@@ -62,18 +63,18 @@ server {
         """
         raise NotImplementedError()
 
-    def install(self):
+    def install(self, cl_args):
         raise NotImplementedError()
 
-    def create_project(self):
+    def create_project(self, cl_args):
         raise NotImplementedError()
 
     # The following methods can be re-implemented for additional operations
 
-    def configure(self):
+    def configure(self, cl_args):
         pass
 
-    def deconfigure(self):
+    def deconfigure(self, cl_args):
         pass
 
     def get_prompts(self):
@@ -81,21 +82,21 @@ server {
 
         :returns: a ``dict``-like instance. Can be ``collections.OrderedDict``
             if you wish to force ordering or prompts. The values will be
-            injected into ``args`` with the key of each item. The value of each
-            item should be a 2-tuple, specifying the text used when prompting,
-            and a default value (or ``None`` if you don't want defaults). The
-            second item can be a callable, in which case the default value
-            will be the return value by calling it with ``args`` as the only
-            argument.
+            injected into ``cl_args`` with the key of each item. The value of
+            each item should be a 2-tuple, specifying the text used when
+            prompting, and a default value (or ``None`` if you don't want
+            defaults). The second item can be a callable, in which case the
+            default value will be the return value by calling it with
+            ``cl_args`` as the only argument.
         """
         return collections.OrderedDict()
 
-    def get_nginx_conf(self, args):
+    def get_nginx_conf(self, cl_args):
         """Provide nginx configuration
 
-        :param args: arguments received from the setup command
+        :param cl_args: arguments received from the setup command
         :rtype: str
         """
         return self.nginx_conf % {
-            'bind_to': args.bind_to, 'server_root': args.server_root
+            'bind_to': cl_args.bind_to, 'server_root': cl_args.server_root
         }

@@ -3,7 +3,7 @@
 
 import os
 import re
-from ..utils import pip_install, env, run
+from ..utils import pip_install, run
 from . import Formula
 
 
@@ -16,21 +16,21 @@ class Django(Formula):
             '{name}.wsgi:application'.format(name=self.project_name)
         )
 
-    def get_nginx_conf(self, args):
+    def get_nginx_conf(self, cl_args):
         serve_dir = os.path.abspath(os.path.join(self.containing_dir, 'serve'))
         return self.get_template('nginx.conf') % {
             'static_root': os.path.join(serve_dir, 'static'),
             'media_root': os.path.join(serve_dir, 'media'),
-            'bind_to': args.bind_to,
-            'server_root': args.server_root
+            'bind_to': cl_args.bind_to,
+            'server_root': cl_args.server_root
         }
 
-    def install(self):
+    def install(self, cl_args):
         pip_install('django')
 
-    def create_project(self):
+    def create_project(self, cl_args):
         admin_script = os.path.join(
-            env.virtualenv_root, self.project_name,
+            self.env.virtualenv_root, self.project_name,
             'bin', 'django-admin.py'
         )
         cmd = '{admin_script} startproject {name}'.format(
@@ -38,7 +38,7 @@ class Django(Formula):
         )
         run(cmd)
 
-    def configure(self):
+    def configure(self, cl_args):
         """Patch settings.py for nginx"""
         settings = os.path.join(
             self.project_root, self.project_name, 'settings.py'

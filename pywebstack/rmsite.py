@@ -60,28 +60,28 @@ def main():
     arg_list = collections.OrderedDict((
         ('name', 'name of site to remove'),
     ))
-    args = parse_args(arg_list=arg_list)
+    cl_args = parse_args(arg_list=arg_list)
 
     config = ConfigParser()
     try:
-        with chdir(os.path.join(env.virtualenv_root, args.name)):
+        with chdir(os.path.join(env.virtualenv_root, cl_args.name)):
             config.read(env.project_config_file_name)
     except OSError:     # Happens if the virtualenv is faulty, etc.
         print('Warning: Cannot load project configuration. '
               'Removal may be incomplete.')
 
     try:
-        formula = get_formula(config.get('Project', 'type', ''), args.name)
+        formula = get_formula(config.get('Project', 'type', ''), cl_args.name)
     except (UnrecognizedFormulaError, NoSectionError):
         formula = None
 
     if formula is not None:
         kill_appserver(formula)
-        formula.teardown()
+        formula.teardown(cl_args)
 
-    rm_startup_conf(env.startup_script_prefix + args.name)
-    rm_nginx_conf(args.name)
-    rm_virtualenv(args.name)
+    rm_startup_conf(env.startup_script_prefix + cl_args.name)
+    rm_nginx_conf(cl_args.name)
+    rm_virtualenv(cl_args.name)
     reload_nginx()
 
 
