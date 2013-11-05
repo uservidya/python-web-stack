@@ -53,7 +53,7 @@ def kill_appserver(formula):
         uwsgi=uwsgi,
         pid_file=os.path.join(formula.containing_dir, 'uwsgi.pid')
     )
-    run(cmd)
+    run(cmd, quiet=True)
 
 
 def main():

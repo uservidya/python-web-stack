@@ -49,6 +49,25 @@ def add_startup_conf(filename, content):
             f.write(content)
 
 
+def add_uwsgi_ini(args, formula):
+    ini_file = os.path.join(formula.containing_dir, 'uwsgi.ini')
+    pid_file = os.path.join(formula.containing_dir, 'uwsgi.pid')
+    log_file = os.path.join(formula.containing_dir, 'uwsgi.log')
+    with open(os.path.join(env.template_root, 'uwsgi.ini')) as f:
+        content = f.read() % {
+            'wsgi_root': args.wsgi_root,
+            'wsgi_path': args.wsgi_path,
+            'bind_to': args.bind_to,
+            'uid': args.uid,
+            'gid': args.gid,
+            'pid_file': pid_file,
+            'log_file': log_file
+        }
+    with open(ini_file, 'w') as f:
+        f.write(content)
+    return ini_file
+
+
 def setup(formula, args):
     config = ConfigParser()
     config.add_section('Project')
@@ -72,24 +91,12 @@ def setup(formula, args):
     add_nginx_conf(args.name, formula.get_nginx_conf(args))
 
     # Setup uWSGI
-    ini_file = os.path.join(formula.containing_dir, 'uwsgi.ini')
-    pid_file = os.path.join(formula.containing_dir, 'uwsgi.pid')
-    log_file = os.path.join(formula.containing_dir, 'uwsgi.log')
-    with open(ini_file, 'w') as f:
-        f.write(formula.get_uwsgi_conf(
-            args, pid_file=pid_file, log_file=log_file
-        ))
+    ini_file = add_uwsgi_ini(args, formula)
 
     uwsgi = os.path.join(current_virtualenv, 'bin', 'uwsgi')
-    cmd_args = (
-        '--master', '--vacuum', '--uid={uid}', '--gid={gid}'
-    )
-    cmd = '{uwsgi} --ini {ini_file} {cmd_args}'.format(
-        uwsgi=uwsgi, ini_file=ini_file, cmd_args=' '.join(cmd_args),
-        uid=args.uid, gid=args.gid
-    )
+    cmd = '{uwsgi} --ini {ini_file}'.format(uwsgi=uwsgi, ini_file=ini_file)
     print('Starting daemon...')
-    run(cmd)
+    run(cmd, quiet=True)
 
     add_startup_conf(env.startup_script_prefix + args.name, cmd)
     reload_nginx()
@@ -111,8 +118,8 @@ def main():
             'Python path used by the app server to import the WSGI module',
             lambda args: get_formula(args.type, args.name).get_wsgi_env()[1]
         )),
-        ('uid', ('User ID for uWSGI worker', '1000')),
-        ('gid', ('Group ID for uWSGI worker', '2000')),
+        ('uid', ('user ID for uWSGI worker', '1000')),
+        ('gid', ('group ID for uWSGI worker', '2000')),
     ))
     args = parse_args(arg_list, opt_arg_list)
 

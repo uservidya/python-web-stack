@@ -61,10 +61,6 @@ server {
         """
         raise NotImplementedError()
 
-    def get_uwsgi_conf(self, args, **kwargs):
-        """Provide configuration content for uWSGI"""
-        raise NotImplementedError()
-
     def install(self):
         raise NotImplementedError()
 

@@ -25,15 +25,6 @@ class Django(Formula):
             'server_root': args.server_root
         }
 
-    def get_uwsgi_conf(self, args, **kwargs):
-        return self.get_template('uwsgi.ini') % {
-            'wsgi_root': args.wsgi_root,
-            'wsgi_path': args.wsgi_path,
-            'bind_to': args.bind_to,
-            'pid_file': kwargs['pid_file'],
-            'log_file': kwargs['log_file']
-        }
-
     def install(self):
         pip_install('django')
 
