@@ -79,10 +79,12 @@ Two scripts (probably need better names):
 
 * Create a app server config file. (Where should this go? A central storage like Nginx config, or inside each project?)
 
-    Not currently implemented. Need to write a startup script, but where best to put it? `/etc/init.d` is fine if we use APT.
+    Currently goes in the project's outer directory (at the same level with the project itself). There are currently three files (PID, config, and log) and seem a bit messy. Maybe need a seperate directory for them?
 
 * Create an appropriate Nginx config file in `sites-available` and link it to `sites-enabled`.
 * Tweak some of the project's configuration. Django's `STATIC_ROOT` and `MEDIA_ROOT`, for example.
+
+    This will be largely framework-dependent. Flask, for example, does not have a convention like this AFAIK. Maybe formulea authors need to provide some personal touch for that, or offer additional prompts.
 
 #### `rmsite`
 
