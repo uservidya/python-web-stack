@@ -2,26 +2,22 @@
 # coding: utf-8
 
 import os.path
-from nose.tools import ok_, raises
+from nose.tools import ok_, eq_, raises
 from pywebstack.formulae import Formula
 from pywebstack import utils
-
-
-ALL_FORMULAE_NAMES = (
-    'django', 'Django'
-)
+from . import ALL_FORMULAE_NAMES
 
 
 def test_normalize():
-    ok_(utils.normalize('..', 'test_utils.py'), __file__)
+    eq_(utils.normalize('..', 'tests', ), os.path.dirname(__file__))
 
 
 def test_chdir():
     current = os.getcwd()
     outer = os.path.abspath(utils.normalize(current, '..'))
     with utils.chdir('..'):
-        ok_(os.getcwd(), outer)
-    ok_(os.getcwd(), current)
+        eq_(os.getcwd(), outer)
+    eq_(os.getcwd(), current)
 
 
 def test_get_formula_class():
