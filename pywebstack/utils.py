@@ -22,15 +22,18 @@ def normalize(*args):
 
 
 class Environment(object):
-    virtualenv_root = normalize('..', 'envs')
-    template_root = normalize('..', 'templates')
-    project_container_name = 'project'
-    project_config_file_name = '.pywebstack.conf'
-    startup_script_prefix = 'pywebstack_'
-    pip = None      # Path to virtualenv pip. Provided at runtime in main()
+    def __init__(self, **attributes):
+        for k in attributes:
+            setattr(self, k, attributes[k])
 
-
-env = Environment()
+env = Environment(
+    virtualenv_root=normalize('..', 'envs'),
+    template_root=normalize('..', 'templates'),
+    project_container_name='project',
+    project_config_file_name='.pywebstack.conf',
+    startup_script_prefix='pywebstack_',
+    pip=None        # Path to virtualenv pip. Provided at runtime in main()
+)
 
 
 @contextlib.contextmanager
