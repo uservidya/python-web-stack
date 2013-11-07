@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import os
+import os.path
 import sys
 import argparse
 import collections
@@ -15,22 +16,21 @@ except AttributeError:  # No raw_input means we're in Python 3. Good! :)
     pass
 
 
+def normalize(*args):
+    """Normalize path relative to pywebstack"""
+    return os.path.normpath(os.path.join(os.path.dirname(__file__), *args))
+
+
 class Environment(object):
-    pass
+    virtualenv_root = normalize('..', 'envs')
+    template_root = normalize('..', 'templates')
+    project_container_name = 'project'
+    project_config_file_name = '.pywebstack.conf'
+    startup_script_prefix = 'pywebstack_'
+    pip = None      # Path to virtualenv pip. Provided at runtime in main()
 
 
-# Some constants
 env = Environment()
-env.virtualenv_root = os.path.normpath(
-    os.path.join(os.path.dirname(__file__), '..', 'envs')
-)
-env.template_root = os.path.normpath(
-    os.path.join(os.path.dirname(__file__), '..', 'templates')
-)
-env.project_container_name = 'project'
-env.project_config_file_name = '.pywebstack.conf'
-env.startup_script_prefix = 'pywebstack_'
-env.pip = None      # Path to virtualenv pip. Provided at runtime in main()
 
 
 @contextlib.contextmanager
@@ -93,21 +93,21 @@ def parse_args(arg_list=None, opt_arg_list=None):
     return parser.parse_args()
 
 
-def fill_opt_args(args, opt_arg_list):
+def fill_opt_args(arg_list, opt_arg_list):
     """Fill the optional arguments by prompting user for input"""
     for arg_name in opt_arg_list:
-        if getattr(args, arg_name, None) is None:
+        if getattr(arg_list, arg_name, None) is None:
             try:
                 default = opt_arg_list[arg_name][1]
             except IndexError:
                 default = None
             if isinstance(default, collections.Callable):
-                default = default(args)
+                default = default(arg_list)
             result = prompt('Specify ' + opt_arg_list[arg_name][0], default)
             if result is None:
                 sys.exit('You need to provide value for ' + arg_name)
-            setattr(args, arg_name, result)
-    return args
+            setattr(arg_list, arg_name, result)
+    return arg_list
 
 
 def get_formula_class(formula_name):
