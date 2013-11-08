@@ -133,7 +133,7 @@ def main():
         cl_args.wsgi_path = wsgi_env[1]
 
     # Prompt for some other needed fields
-    opt_arg_list.update(formula.get_prompts)
+    opt_arg_list.update(formula.get_prompts())
     cl_args = fill_opt_args(cl_args, opt_arg_list)
 
     # Be sensitive and fix leading and trailing slashes

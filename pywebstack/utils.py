@@ -11,6 +11,15 @@ import errno
 import importlib
 
 
+__all__ = [
+    'env',
+    'UnrecognizedFormulaError',
+    'normalize', 'chdir', 'mkdir_p', 'prompt', 'run', 'pip_install',
+    'reload_nginx', 'parse_args', 'fill_opt_args', 'get_formula_class',
+    'get_formula'
+]
+
+
 try:
     input = raw_input
 except AttributeError:  # No raw_input means we're in Python 3. Good! :)
@@ -22,7 +31,7 @@ def normalize(*args):
     return os.path.normpath(os.path.join(os.path.dirname(__file__), *args))
 
 
-class Environment(dict):
+class _Environment(dict):
     def __getattr__(self, key):
         try:
             return self[key]
@@ -33,7 +42,7 @@ class Environment(dict):
         self[key] = value
 
 
-env = Environment({
+env = _Environment({
     'virtualenv_root': normalize('..', 'envs'),
     'template_root': normalize('..', 'templates'),
     'project_container_name': 'project',
