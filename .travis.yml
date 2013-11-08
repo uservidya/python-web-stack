@@ -4,5 +4,5 @@ python:
   - "2.7"
   - "3.3"
 script:
-  - ./manage test --with-xunit --xunit-file=shippable/testresults/
-
+  - ./manage test 
+   - nosetests --with-xunit --xunit-file=shippable/testresults/
