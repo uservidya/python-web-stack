@@ -7,6 +7,7 @@ import sys
 import argparse
 import collections
 import contextlib
+import errno
 import importlib
 
 
@@ -37,6 +38,9 @@ env = Environment({
     'template_root': normalize('..', 'templates'),
     'project_container_name': 'project',
     'project_config_file_name': '.pywebstack.conf',
+    'nginx_conf_dir': '/etc/nginx/sites-available',
+    'nginx_conf_link_dir': '/etc/nginx/sites-enabled',
+    'startup_script_dir': '/etc/init.d',
     'startup_script_prefix': 'pywebstack_',
     'pip': None     # Path to virtualenv pip. Provided at runtime in main()
 })
@@ -55,6 +59,21 @@ def chdir(dirname):
         raise
     else:
         os.chdir(cwd)
+
+
+def mkdir_p(path):
+    """Imitate UN*X command ``mkdir -p``
+
+    This function basically calls ``os.path.makedirs``, but does not raise
+    and exception if the directory already exists.
+    """
+    try:
+        os.makedirs(path)
+    except OSError as e:    # Take care of existed dirs
+        if e.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
 
 
 def prompt(msg, default=None):

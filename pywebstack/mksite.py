@@ -24,8 +24,8 @@ def make_virtualenv(cl_args):
 
 
 def add_nginx_conf(filename, content):
-    available = '/etc/nginx/sites-available'
-    enabled = '/etc/nginx/sites-enabled'
+    available = env.nginx_conf_dir
+    enabled = env.nginx_conf_link_dir
 
     available_filename = os.path.join(available, filename)
 
@@ -41,7 +41,7 @@ def add_nginx_conf(filename, content):
 
 
 def add_startup_conf(filename, content):
-    path = '/etc/init.d'
+    path = env.startup_script_dir
 
     print('Adding app server to startup script...')
     with chdir(path):
