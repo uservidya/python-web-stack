@@ -5,4 +5,4 @@ python:
   - "3.3"
 script:
   - ./manage test 
-   - nosetests --with-xunit --xunit-file=shippable/testresults/
+   - nosetests  test_mksite.py --with-xunit --xunit-file=shippable/testresults/
