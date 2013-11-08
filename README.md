@@ -1,5 +1,7 @@
 > Warning: Currently my priority is to hack together a workable prototype, so this document may be inaccurate. Please don't rely on anything written here, including command usages and config structures, including others, without consulting the source code.
 
+[![Build Status](https://travis-ci.org/uranusjr/python-web-stack.png?branch=master)](https://travis-ci.org/uranusjr/python-web-stack)
+
 # Python Web Stack
 
 A complete web stack for Python WSGI applications. Called PWS onward.
