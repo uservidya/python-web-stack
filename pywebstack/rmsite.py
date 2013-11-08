@@ -23,8 +23,8 @@ def rm_virtualenv(name):
 
 
 def rm_nginx_conf(name):
-    available = '/etc/nginx/sites-available'    # TODO: DRY (with mksite.py)
-    enabled = '/etc/nginx/sites-enabled'
+    available = env.nginx_conf_dir
+    enabled = env.nginx_conf_link_dir
 
     print('Removing nginx configuration files...')
     with chdir(enabled):
@@ -36,7 +36,7 @@ def rm_nginx_conf(name):
 
 
 def rm_startup_conf(filename):
-    path = '/etc/init.d'
+    path = env.startup_script_dir
 
     print('Removing startup scripts...')
     with chdir(path):

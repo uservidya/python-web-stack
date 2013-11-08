@@ -4,7 +4,7 @@
 import os.path
 from nose.tools import ok_, eq_, with_setup
 from pywebstack import mksite, utils
-from . import TEMP_DIR, PROJECT_NAME, create_tempdir, cleanup_tempdir
+from . import *
 
 
 utils.env.update({
@@ -20,12 +20,7 @@ def _create_tempdirs():
     utils.mkdir_p(utils.env.virtualenv_root)
     utils.mkdir_p(utils.env.nginx_conf_dir)
     utils.mkdir_p(utils.env.nginx_conf_link_dir)
-
-
-class MockedArguments(object):
-    def __init__(self, **attributes):
-        for k in attributes:
-            setattr(self, k, attributes[k])
+    utils.mkdir_p(utils.env.startup_script_dir)
 
 
 @with_setup(setup=_create_tempdirs, teardown=cleanup_tempdir)
