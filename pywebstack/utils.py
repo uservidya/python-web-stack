@@ -21,19 +21,25 @@ def normalize(*args):
     return os.path.normpath(os.path.join(os.path.dirname(__file__), *args))
 
 
-class Environment(object):
-    def __init__(self, **attributes):
-        for k in attributes:
-            setattr(self, k, attributes[k])
+class Environment(dict):
+    def __getattr__(self, key):
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError(key)
 
-env = Environment(
-    virtualenv_root=normalize('..', 'envs'),
-    template_root=normalize('..', 'templates'),
-    project_container_name='project',
-    project_config_file_name='.pywebstack.conf',
-    startup_script_prefix='pywebstack_',
-    pip=None        # Path to virtualenv pip. Provided at runtime in main()
-)
+    def __setattr__(self, key, value):
+        self[key] = value
+
+
+env = Environment({
+    'virtualenv_root': normalize('..', 'envs'),
+    'template_root': normalize('..', 'templates'),
+    'project_container_name': 'project',
+    'project_config_file_name': '.pywebstack.conf',
+    'startup_script_prefix': 'pywebstack_',
+    'pip': None     # Path to virtualenv pip. Provided at runtime in main()
+})
 
 
 @contextlib.contextmanager
